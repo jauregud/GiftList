@@ -11,7 +11,8 @@
 ---
 
 ## Important Links
-
+LucidChart Diagrams - https://lucid.app/lucidchart/86c66f15-f086-40fd-9e13-954487fd6dd2/edit?beaconFlowId=693C219668540326&invitationId=inv_d87975cb-13cc-4b97-bfd5-43dd285a0dd5&page=0_0#
+Figma UI - https://www.figma.com/design/63faLuDJad4PZ2VO0HwPWU/CIS350-Project-UI?node-id=0-1&p=f&t=o0PSfmQVKbfnbpQA-0
 
 ---
 
