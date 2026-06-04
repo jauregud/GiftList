@@ -1,6 +1,6 @@
 # CIS 350 Project
 
-##  GiftList — Christmas Exchange Web App
+##  GiftList — Gift Exchange Web App
 
 ---
 
