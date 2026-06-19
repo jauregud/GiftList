@@ -1,0 +1,94 @@
+{
+  "hash": "48dc6b9c",
+  "configHash": "4c703415",
+  "lockfileHash": "7e8145e3",
+  "browserHash": "9f184b44",
+  "optimized": {
+    "react": {
+      "src": "../../react/index.js",
+      "file": "react.js",
+      "fileHash": "e0c56e53",
+      "needsInterop": true
+    },
+    "react-dom": {
+      "src": "../../react-dom/index.js",
+      "file": "react-dom.js",
+      "fileHash": "9fb8d296",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "a237aff6",
+      "needsInterop": true
+    },
+    "react/jsx-runtime": {
+      "src": "../../react/jsx-runtime.js",
+      "file": "react_jsx-runtime.js",
+      "fileHash": "126ab9c9",
+      "needsInterop": true
+    },
+    "date-fns": {
+      "src": "../../date-fns/index.mjs",
+      "file": "date-fns.js",
+      "fileHash": "a284cbf9",
+      "needsInterop": false
+    },
+    "firebase/app": {
+      "src": "../../firebase/app/dist/esm/index.esm.js",
+      "file": "firebase_app.js",
+      "fileHash": "5fb00d82",
+      "needsInterop": false
+    },
+    "firebase/auth": {
+      "src": "../../firebase/auth/dist/esm/index.esm.js",
+      "file": "firebase_auth.js",
+      "fileHash": "070ca436",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "49acc74a",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "d04a30e7",
+      "needsInterop": true
+    },
+    "react-router": {
+      "src": "../../react-router/dist/development/index.mjs",
+      "file": "react-router.js",
+      "fileHash": "be31f758",
+      "needsInterop": false
+    },
+    "sonner": {
+      "src": "../../sonner/dist/index.mjs",
+      "file": "sonner.js",
+      "fileHash": "d2edb61f",
+      "needsInterop": false
+    },
+    "firebase/firestore": {
+      "src": "../../firebase/firestore/dist/esm/index.esm.js",
+      "file": "firebase_firestore.js",
+      "fileHash": "15fe388a",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-KDCVS43I": {
+      "file": "chunk-KDCVS43I.js"
+    },
+    "chunk-RLJ2RCJQ": {
+      "file": "chunk-RLJ2RCJQ.js"
+    },
+    "chunk-ECT64IN2": {
+      "file": "chunk-ECT64IN2.js"
+    },
+    "chunk-DC5AMYBS": {
+      "file": "chunk-DC5AMYBS.js"
+    }
+  }
+}
