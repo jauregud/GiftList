@@ -41,7 +41,7 @@ export default function JoinGroup() {
   async function handleJoin() {
     if (!user || !code) return;
     setJoining(true);
-    const result = joinGroupByCode(code, { id: user.id, name: user.name, email: user.email });
+    const result = await joinGroupByCode(code, { id: user.id, name: user.name, email: user.email });
     if (!result) {
       toast.error("Failed to join. The link may be invalid.");
       setJoining(false);

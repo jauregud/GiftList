@@ -64,3 +64,23 @@ export async function firebaseSignOut() {
   const { signOut } = await import("firebase/auth");
   await signOut(fbAuth);
 }
+
+
+/////////////////////////////////////
+let firestore: import("firebase/firestore").Firestore | null = null;
+
+export async function getFirestoreDb() {
+  if (firestore) return firestore;
+
+  const { initializeApp, getApps } = await import("firebase/app");
+  const { getFirestore } = await import("firebase/firestore");
+
+  const app =
+    getApps().length === 0
+      ? initializeApp(firebaseConfig)
+      : getApps()[0];
+
+  firestore = getFirestore(app);
+
+  return firestore;
+}

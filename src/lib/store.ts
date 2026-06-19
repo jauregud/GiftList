@@ -1,5 +1,5 @@
 import type { Group, WishlistItem, Claim, Member } from "./types";
-
+import { getFirestoreDb } from "./firebase";
 const GROUPS_KEY = "giftlist_groups";
 const ITEMS_KEY = "giftlist_items";
 const CLAIMS_KEY = "giftlist_claims";
@@ -46,22 +46,49 @@ function nanoid(): string {
 
 // ─── Groups ──────────────────────────────────────────────────────────────────
 
-export function getUserGroups(userId: string): Group[] {
-  return getGroups().filter(
-    (g) => g.ownerId === userId || g.members.some((m) => m.userId === userId)
+export async function getUserGroups(////////////////////////////////
+  userId: string
+): Promise<Group[]> {
+  const db = await getFirestoreDb();
+
+  const { collection, getDocs } =
+    await import("firebase/firestore");
+
+  const snapshot = await getDocs(
+    collection(db, "groups")
+  );
+
+  const groups = snapshot.docs.map((doc) => ({
+    ...(doc.data() as Group),
+  }));
+
+  return groups.filter(
+    (g) =>
+      g.ownerId === userId ||
+      g.members.some((m) => m.userId === userId)
   );
 }
 
-export function getGroupById(groupId: string): Group | null {
-  return getGroups().find((g) => g.id === groupId) ?? null;
+export async function getGroupById(groupId: string): Promise<Group | null> { /////////////////////////
+  const db = await getFirestoreDb();
+
+  const { doc, getDoc } = await import("firebase/firestore");
+
+  const snap = await getDoc(
+    doc(db, "groups", groupId)
+  );
+
+  if (!snap.exists()) return null;
+
+  return snap.data() as Group;
 }
 
-export function createGroup(
+export async function createGroup(
   name: string,
   description: string,
   budget: number | undefined,
   owner: { id: string; name: string; email: string }
-): Group {
+): Promise<Group> {
   const group: Group = {
     id: nanoid(),
     name,
@@ -73,24 +100,80 @@ export function createGroup(
     members: [{ userId: owner.id, name: owner.name, email: owner.email }],
     createdAt: new Date().toISOString(),
   };
-  setGroups([...getGroups(), group]);
+
+  const db = await getFirestoreDb();
+
+  const { doc, setDoc } = await import("firebase/firestore");
+
+  await setDoc(
+    doc(db, "groups", group.id),
+    group
+  );
+
   return group;
 }
 
-export function joinGroupByCode(
+
+
+
+export async function joinGroupByCode(
   code: string,
-  joiner: { id: string; name: string; email: string }
-): Group | null {
-  const groups = getGroups();
-  const idx = groups.findIndex((g) => g.inviteCode === code);
-  if (idx === -1) return null;
-  const group = groups[idx];
-  if (group.members.some((m) => m.userId === joiner.id)) return group;
-  const member: Member = { userId: joiner.id, name: joiner.name, email: joiner.email };
-  const updated = { ...group, members: [...group.members, member] };
-  groups[idx] = updated;
-  setGroups(groups);
-  return updated;
+  joiner: {
+    id: string;
+    name: string;
+    email: string;
+  }
+): Promise<Group | null> {
+
+  const db = await getFirestoreDb();
+
+  const {
+    collection,
+    query,
+    where,
+    getDocs,
+    doc,
+    updateDoc,
+  } = await import("firebase/firestore");
+
+
+  const q = query(
+    collection(db, "groups"),
+    where("inviteCode", "==", code)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) return null;
+
+  const groupDoc = snapshot.docs[0];
+
+  const group = groupDoc.data() as Group;
+
+  if (group.members.some((m) => m.userId === joiner.id)) {
+    return group;
+  }
+
+  const updatedMembers = [
+    ...group.members,
+    {
+      userId: joiner.id,
+      name: joiner.name,
+      email: joiner.email,
+    },
+  ];
+
+  await updateDoc(
+    doc(db, "groups", groupDoc.id),
+    {
+      members: updatedMembers,
+    }
+  );
+
+  return {
+    ...group,
+    members: updatedMembers,
+  };
 }
 
 // ─── Wishlist Items ───────────────────────────────────────────────────────────
@@ -147,11 +230,22 @@ export function unclaimItem(itemId: string, userId: string): void {
 
 // Returns group members' items visible to a browser (not their own),
 // with claim info. The item owner NEVER sees claimedBy.
-export function getGroupWishlists(
+export async function getGroupWishlists(
   groupId: string,
   viewerId: string
-): { member: Member; items: Array<WishlistItem & { isClaimed: boolean; claimedByMe: boolean; claimedByName?: string }> }[] {
-  const group = getGroupById(groupId);
+): Promise<
+  {
+    member: Member;
+    items: Array<
+      WishlistItem & {
+        isClaimed: boolean;
+        claimedByMe: boolean;
+        claimedByName?: string;
+      }
+    >;
+  }[]
+> {
+  const group = await getGroupById(groupId);
   if (!group) return [];
   const allItems = getItems().filter((i) => i.groupId === groupId);
   const allClaims = getClaims().filter((c) => c.groupId === groupId);

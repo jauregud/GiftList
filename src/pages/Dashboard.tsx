@@ -8,6 +8,7 @@ import type { Group } from "../lib/types";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
+
 function GroupCard({ group, currentUserId }: { group: Group; currentUserId: string }) {
   const [copied, setCopied] = useState(false);
   const isOwner = group.ownerId === currentUserId;
@@ -113,18 +114,27 @@ export default function Dashboard() {
   // Join form state
   const [joinCode, setJoinCode] = useState("");
 
-  useEffect(() => {
-    if (user) setGroups(getUserGroups(user.id));
-  }, [user]);
+  useEffect(() => {    ///////////////////////////////////////////
+  async function loadGroups() {
+    if (!user) return;
 
-  function refreshGroups() {
-    if (user) setGroups(getUserGroups(user.id));
+    const groups = await getUserGroups(user.id);
+    setGroups(groups);
   }
 
-  function handleCreate(e: React.FormEvent) {
+  loadGroups();
+}, [user]);
+
+async function refreshGroups() {
+  if (!user) return;
+
+  const groups = await getUserGroups(user.id);
+  setGroups(groups);
+}
+  async function handleCreate(e: React.FormEvent) { //////////////////////////////////
     e.preventDefault();
     if (!user) return;
-    const group = createGroup(
+    const group = await createGroup(
       createName,
       createDesc,
       createBudget ? Number(createBudget) : undefined,
@@ -138,11 +148,12 @@ export default function Dashboard() {
     navigate(`/groups/${group.id}`);
   }
 
-  function handleJoin(e: React.FormEvent) {
+
+  async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
     const code = joinCode.trim().split("/").pop() ?? joinCode.trim();
-    const group = joinGroupByCode(code, { id: user.id, name: user.name, email: user.email });
+    const group = await joinGroupByCode(code, { id: user.id, name: user.name, email: user.email });
     if (!group) {
       toast.error("Invalid invite code. Check the link and try again.");
       return;

@@ -187,7 +187,9 @@ function MyWishlistTab({ group, userId }: { group: Group; userId: string }) {
     setItems(getOwnerItemViews(userId, group.id));
   }, [userId, group.id]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+  refresh();
+}, [refresh]);
 
   function handleAdd(data: Omit<WishlistItem, "id" | "userId" | "groupId">) {
     addItem({ ...data, userId, groupId: group.id });
@@ -338,13 +340,18 @@ function MyWishlistTab({ group, userId }: { group: Group; userId: string }) {
 // ─── Browse Tab ───────────────────────────────────────────────────────────────
 
 function BrowseTab({ group, viewer }: { group: Group; viewer: { id: string; name: string } }) {
-  const [wishlists, setWishlists] = useState<ReturnType<typeof getGroupWishlists>>([]);
+  const [wishlists, setWishlists] = useState<
+  Awaited<ReturnType<typeof getGroupWishlists>>
+>([]);
 
-  const refresh = useCallback(() => {
-    setWishlists(getGroupWishlists(group.id, viewer.id));
-  }, [group.id, viewer.id]);
+const refresh = useCallback(async () => {
+  const data = await getGroupWishlists(group.id, viewer.id);
+  setWishlists(data);
+}, [group.id, viewer.id]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+  refresh();
+}, [refresh]);
 
   async function handleClaim(item: WishlistItem & { isClaimed: boolean; claimedByMe: boolean }) {
     if (item.isClaimed && !item.claimedByMe) {
@@ -553,12 +560,22 @@ export default function GroupView() {
   const [tab, setTab] = useState<Tab>("wishlist");
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {///////////////////////////////////////////////////////////////
+  async function loadGroup() {
     if (!id) return;
-    const g = getGroupById(id);
-    if (!g) { setNotFound(true); return; }
+
+    const g = await getGroupById(id);
+
+    if (!g) {
+      setNotFound(true);
+      return;
+    }
+
     setGroup(g);
-  }, [id]);
+  }
+
+  loadGroup();
+}, [id]);
 
   if (!user) return null;
 
