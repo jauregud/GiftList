@@ -1,5 +1,10 @@
 import type { Group, WishlistItem, Claim, Member } from "./types";
 import { getFirestoreDb } from "./firebase";
+import {
+  doc,
+  updateDoc,
+  getDoc,
+} from "firebase/firestore";
 const GROUPS_KEY = "giftlist_groups";
 const ITEMS_KEY = "giftlist_items";
 const CLAIMS_KEY = "giftlist_claims";
@@ -178,23 +183,86 @@ export async function joinGroupByCode(
 
 // ─── Wishlist Items ───────────────────────────────────────────────────────────
 
-export function getMyItems(userId: string, groupId: string): WishlistItem[] {
-  return getItems().filter((i) => i.userId === userId && i.groupId === groupId);
+export async function getMyItems(///////////////////////////////////////////
+  userId: string,
+  groupId: string
+): Promise<WishlistItem[]> {
+  const db = await getFirestoreDb();
+
+  const {
+    collection,
+    query,
+    where,
+    getDocs,
+  } = await import("firebase/firestore");
+
+  const q = query(
+    collection(db, "items"),
+    where("userId", "==", userId),
+    where("groupId", "==", groupId)
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(
+    (doc) => doc.data() as WishlistItem
+  );
 }
 
-export function addItem(item: Omit<WishlistItem, "id">): WishlistItem {
-  const newItem: WishlistItem = { ...item, id: nanoid() };
-  setItems([...getItems(), newItem]);
+export async function addItem( //////////////////////////////
+  item: Omit<WishlistItem, "id">
+): Promise<WishlistItem> {
+
+  const newItem: WishlistItem = {
+    ...item,
+    id: nanoid(),
+  };
+
+  const db = await getFirestoreDb();
+
+  const { doc, setDoc } =
+    await import("firebase/firestore");
+
+  await setDoc(
+    doc(db, "items", newItem.id),
+    newItem
+  );
+
   return newItem;
 }
 
-export function updateItem(id: string, updates: Partial<WishlistItem>): void {
-  setItems(getItems().map((i) => (i.id === id ? { ...i, ...updates } : i)));
+export async function updateItem(/////////////////////////////
+  id: string,
+  updates: Partial<WishlistItem>
+): Promise<void> {
+
+  const db = await getFirestoreDb();
+
+  const {
+    doc,
+    updateDoc,
+  } = await import("firebase/firestore");
+
+  await updateDoc(
+    doc(db, "items", id),
+    updates
+  );
 }
 
-export function deleteItem(id: string): void {
-  setItems(getItems().filter((i) => i.id !== id));
-  setClaims(getClaims().filter((c) => c.itemId !== id));
+export async function deleteItem(//////////////////////////////
+  id: string
+): Promise<void> {
+
+  const db = await getFirestoreDb();
+
+  const {
+    doc,
+    deleteDoc,
+  } = await import("firebase/firestore");
+
+  await deleteDoc(
+    doc(db, "items", id)
+  );
 }
 
 // ─── Claims (privacy layer) ───────────────────────────────────────────────────
@@ -206,26 +274,46 @@ export function deleteItem(id: string): void {
 //
 // In this localStorage demo, privacy is enforced in the query layer below.
 
-export function claimItem(
+
+
+export async function claimItem(///////////////////////////////
   item: WishlistItem,
-  claimer: { id: string; name: string }
-): void {
-  const claims = getClaims();
-  const existing = claims.find((c) => c.itemId === item.id);
-  if (existing) return;
-  const claim: Claim = {
-    id: nanoid(),
-    itemId: item.id,
-    claimedBy: claimer.id,
-    claimedByName: claimer.name,
-    groupId: item.groupId,
-    itemOwnerId: item.userId,
-  };
-  setClaims([...claims, claim]);
+  viewer: { id: string; name: string }
+) {
+  const db = await getFirestoreDb();
+
+  const itemRef = doc(db, "items", item.id);
+
+  await updateDoc(itemRef, {
+    isClaimed: true,
+    claimedBy: viewer.id,
+    claimedByName: viewer.name,
+  });
 }
 
-export function unclaimItem(itemId: string, userId: string): void {
-  setClaims(getClaims().filter((c) => !(c.itemId === itemId && c.claimedBy === userId)));
+export async function unclaimItem(/////////////////////////////////////
+  itemId: string,
+  userId: string
+) {
+  const db = await getFirestoreDb();
+
+  const itemRef = doc(db, "items", itemId);
+
+  const snap = await getDoc(itemRef);
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  if (data.claimedBy !== userId) {
+    return;
+  }
+
+  await updateDoc(itemRef, {
+    isClaimed: false,
+    claimedBy: null,
+    claimedByName: null,
+  });
 }
 
 // Returns group members' items visible to a browser (not their own),
@@ -268,14 +356,18 @@ export async function getGroupWishlists(
 }
 
 // Returns owner view — only boolean isClaimed, no claimedBy (privacy enforced)
-export function getOwnerItemViews(
+export async function getOwnerItemViews(
   userId: string,
   groupId: string
-): Array<WishlistItem & { isClaimed: boolean }> {
-  const items = getMyItems(userId, groupId);
-  const claims = getClaims();
-  return items.map((item) => ({
+) {
+
+  const items = await getMyItems(
+    userId,
+    groupId
+  );
+
+  return items.map(item => ({
     ...item,
-    isClaimed: claims.some((c) => c.itemId === item.id),
+    isClaimed: false
   }));
 }

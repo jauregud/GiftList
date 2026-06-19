@@ -55,7 +55,9 @@ function ItemForm({
   onCancel,
 }: {
   initial?: Partial<WishlistItem>;
-  onSave: (data: Omit<WishlistItem, "id" | "userId" | "groupId">) => void;
+  onSave: (
+  data: Omit<WishlistItem, "id" | "userId" | "groupId">
+  ) => Promise<void>;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
@@ -65,17 +67,21 @@ function ItemForm({
   const [priority, setPriority] = useState<Priority>(initial?.priority ?? 2);
   const [price, setPrice] = useState(initial?.price?.toString() ?? "");
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSave({
-      name,
-      description: desc || undefined,
-      imageUrl: imageUrl || undefined,
-      shopUrl: shopUrl || undefined,
-      priority,
-      price: price ? Number(price) : undefined,
-    });
-  }
+  function handleSubmit(e: React.FormEvent) {/////////////////////////////////////
+  e.preventDefault();
+
+  const data: Omit<WishlistItem, "id" | "userId" | "groupId"> = {
+    name,
+    priority,
+  };
+
+  if (desc) data.description = desc;
+  if (imageUrl) data.imageUrl = imageUrl;
+  if (shopUrl) data.shopUrl = shopUrl;
+  if (price) data.price = Number(price);
+
+  onSave(data);
+}
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border-2 border-primary/25 rounded-2xl p-5 space-y-4">
@@ -179,37 +185,58 @@ function ItemForm({
 // ─── My Wishlist Tab ──────────────────────────────────────────────────────────
 
 function MyWishlistTab({ group, userId }: { group: Group; userId: string }) {
-  const [items, setItems] = useState<ReturnType<typeof getOwnerItemViews>>([]);
+  type WishlistViewItem = WishlistItem & {
+  isClaimed: boolean;
+  claimedByMe?: boolean;
+};
+
+const [items, setItems] = useState<WishlistViewItem[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
-  const refresh = useCallback(() => {
-    setItems(getOwnerItemViews(userId, group.id));
-  }, [userId, group.id]);
+  const refresh = useCallback(async () => {
+  const data = await getOwnerItemViews(
+    userId,
+    group.id
+  );
+
+  setItems(data);
+}, [userId, group.id]);
 
   useEffect(() => {
   refresh();
 }, [refresh]);
 
-  function handleAdd(data: Omit<WishlistItem, "id" | "userId" | "groupId">) {
-    addItem({ ...data, userId, groupId: group.id });
-    setShowAdd(false);
-    toast.success("Item added!");
-    refresh();
-  }
+ async function handleAdd(////////////////////////////////////////////////
+  data: Omit<WishlistItem, "id" | "userId" | "groupId">
+) {
+  await addItem({
+    ...data,
+    userId,
+    groupId: group.id,
+  });
 
-  function handleEdit(id: string, data: Omit<WishlistItem, "id" | "userId" | "groupId">) {
-    updateItem(id, data);
-    setEditId(null);
-    toast.success("Item updated!");
-    refresh();
-  }
+  setShowAdd(false);
+  toast.success("Item added!");
+  refresh();
+}
 
-  function handleDelete(id: string, name: string) {
-    deleteItem(id);
-    toast.success(`"${name}" removed.`);
-    refresh();
-  }
+
+async function handleEdit(
+  id: string,
+  data: Omit<WishlistItem, "id" | "userId" | "groupId">
+) {
+  await updateItem(id, data);
+  setEditId(null);
+  toast.success("Item updated!");
+  refresh();
+}
+
+async function handleDelete(id: string, name: string) {
+  await deleteItem(id);
+  toast.success(`"${name}" removed.`);
+  refresh();
+}
 
   const sorted = [...items].sort((a, b) => a.priority - b.priority);
 
@@ -359,10 +386,10 @@ const refresh = useCallback(async () => {
       return;
     }
     if (item.claimedByMe) {
-      unclaimItem(item.id, viewer.id);
+      await unclaimItem(item.id, viewer.id);
       toast.success("Claim released.");
     } else {
-      claimItem(item, viewer);
+      await claimItem(item, viewer);
       toast.success("Claimed! It's a secret 🤫");
     }
     refresh();

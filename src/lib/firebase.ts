@@ -11,6 +11,7 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+
 export const isFirebaseConfigured = !!import.meta.env.VITE_FIREBASE_API_KEY;
 
 let auth: import("firebase/auth").Auth | null = null;
