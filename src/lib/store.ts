@@ -92,7 +92,13 @@ export async function addItem(
   const newItem: WishlistItem = { ...item, id: nanoid() };
   const db = await getFirestoreDb();
   const { doc, setDoc } = await import("firebase/firestore");
-  await setDoc(doc(db, "items", newItem.id), newItem);
+  
+  // Remove undefined fields - Firestore doesn't allow undefined values
+  const dataToSave = Object.fromEntries(
+    Object.entries(newItem).filter(([_, v]) => v !== undefined)
+  );
+  
+  await setDoc(doc(db, "items", newItem.id), dataToSave);
   return newItem;
 }
 
@@ -102,7 +108,13 @@ export async function updateItem(
 ): Promise<void> {
   const db = await getFirestoreDb();
   const { doc, updateDoc } = await import("firebase/firestore");
-  await updateDoc(doc(db, "items", id), updates as Record<string, unknown>);
+  
+  // Remove undefined fields - Firestore doesn't allow undefined values
+  const dataToUpdate = Object.fromEntries(
+    Object.entries(updates).filter(([_, v]) => v !== undefined)
+  );
+  
+  await updateDoc(doc(db, "items", id), dataToUpdate as Record<string, unknown>);
 }
 
 export async function deleteItem(id: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link } from "react-router";
 import {
   ArrowLeft, Star, Plus, ExternalLink, Trash2, Edit3, Check,
   Users, Gift, ShoppingBag, Lock, AlertCircle, Copy, Image, Link2
@@ -18,8 +18,6 @@ import {
 import type { Group, WishlistItem, Priority } from "../lib/types";
 import { PRIORITY_COLORS } from "../components/MemphisShapes";
 import { toast } from "sonner";
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function PriorityBadge({ priority }: { priority: Priority }) {
   const p = PRIORITY_COLORS[priority];
@@ -49,17 +47,13 @@ function ItemImage({ url, name }: { url?: string; name: string }) {
   );
 }
 
-function ItemForm({
-  initial,
-  onSave,
-  onCancel,
-}: {
+interface ItemFormProps {
   initial?: Partial<WishlistItem>;
-  onSave: (
-  data: Omit<WishlistItem, "id" | "userId" | "groupId">
-  ) => Promise<void>;
+  onSave: (data: Omit<WishlistItem, "id" | "userId" | "groupId">) => void;
   onCancel: () => void;
-}) {
+}
+
+function ItemForm({ initial, onSave, onCancel }: ItemFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [desc, setDesc] = useState(initial?.description ?? "");
   const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? "");
@@ -67,36 +61,49 @@ function ItemForm({
   const [priority, setPriority] = useState<Priority>(initial?.priority ?? 2);
   const [price, setPrice] = useState(initial?.price?.toString() ?? "");
 
-  function handleSubmit(e: React.FormEvent) {/////////////////////////////////////
-  e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const data: Omit<WishlistItem, "id" | "userId" | "groupId"> = {
-    name,
-    priority,
+    // Validate only required fields
+    if (!name.trim()) {
+      toast.error("Please enter an item name");
+      return;
+    }
+
+    if (!price.trim()) {
+      toast.error("Please enter a price");
+      return;
+    }
+
+    // All optional fields - pass undefined if empty
+    onSave({
+      name: name.trim(),
+      priority,
+      price: Number(price),
+      description: desc.trim() || undefined,
+      imageUrl: imageUrl.trim() || undefined,
+      shopUrl: shopUrl.trim() || undefined,
+    });
   };
-
-  if (desc) data.description = desc;
-  if (imageUrl) data.imageUrl = imageUrl;
-  if (shopUrl) data.shopUrl = shopUrl;
-  if (price) data.price = Number(price);
-
-  onSave(data);
-}
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border-2 border-primary/25 rounded-2xl p-5 space-y-4">
       <div className="grid sm:grid-cols-2 gap-4">
+        {/* Name - REQUIRED */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-bold text-foreground mb-1">Item name *</label>
+          <label className="block text-xs font-bold text-foreground mb-1">
+            Item name <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Sony WH-1000XM5 Headphones"
-            required
+            placeholder="e.g. Sony WH-1000XM5 Headphones"
             className="w-full px-3.5 py-2.5 bg-input-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
           />
         </div>
+
+        {/* Image URL - OPTIONAL */}
         <div>
           <label className="block text-xs font-bold text-foreground mb-1">Image URL</label>
           <div className="relative">
@@ -105,11 +112,13 @@ function ItemForm({
               type="url"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://…"
+              placeholder="https://example.com/image.jpg"
               className="w-full pl-8 pr-3 py-2.5 bg-input-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
           </div>
         </div>
+
+        {/* Shop Link - OPTIONAL */}
         <div>
           <label className="block text-xs font-bold text-foreground mb-1">Shop link</label>
           <div className="relative">
@@ -118,13 +127,17 @@ function ItemForm({
               type="url"
               value={shopUrl}
               onChange={(e) => setShopUrl(e.target.value)}
-              placeholder="https://amazon.com/…"
+              placeholder="https://amazon.com/dp/..."
               className="w-full pl-8 pr-3 py-2.5 bg-input-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
           </div>
         </div>
+
+        {/* Price - REQUIRED */}
         <div>
-          <label className="block text-xs font-bold text-foreground mb-1">Approximate price</label>
+          <label className="block text-xs font-bold text-foreground mb-1">
+            Price <span className="text-red-500">*</span>
+          </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
             <input
@@ -133,12 +146,17 @@ function ItemForm({
               onChange={(e) => setPrice(e.target.value)}
               placeholder="79.99"
               min="0"
+              step="0.01"
               className="w-full pl-7 pr-3 py-2.5 bg-input-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
           </div>
         </div>
+
+        {/* Priority - REQUIRED */}
         <div>
-          <label className="block text-xs font-bold text-foreground mb-1">Priority</label>
+          <label className="block text-xs font-bold text-foreground mb-1">
+            Priority <span className="text-red-500">*</span>
+          </label>
           <div className="flex gap-2">
             {([1, 2, 3] as Priority[]).map((p) => (
               <button
@@ -156,17 +174,20 @@ function ItemForm({
             ))}
           </div>
         </div>
+
+        {/* Description - OPTIONAL */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-bold text-foreground mb-1">Description (optional)</label>
+          <label className="block text-xs font-bold text-foreground mb-1">Description</label>
           <input
             type="text"
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
-            placeholder="The black one, not silver"
+            placeholder="e.g. The black one, not silver"
             className="w-full px-3.5 py-2.5 bg-input-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
           />
         </div>
       </div>
+
       <div className="flex gap-3 pt-1">
         <button
           type="submit"
@@ -174,7 +195,11 @@ function ItemForm({
         >
           {initial?.name ? "Save changes" : "Add item"}
         </button>
-        <button type="button" onClick={onCancel} className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-3"
+        >
           Cancel
         </button>
       </div>
@@ -182,85 +207,81 @@ function ItemForm({
   );
 }
 
-// ─── My Wishlist Tab ──────────────────────────────────────────────────────────
-
 function MyWishlistTab({ group, userId }: { group: Group; userId: string }) {
-  type WishlistViewItem = WishlistItem & {
-  isClaimed: boolean;
-  claimedByMe?: boolean;
-};
-
-const [items, setItems] = useState<WishlistViewItem[]>([]);
+  const [items, setItems] = useState<Array<WishlistItem & { isClaimed: boolean }>>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-  const data = await getOwnerItemViews(
-    userId,
-    group.id
-  );
-
-  setItems(data);
-}, [userId, group.id]);
+    setLoading(true);
+    try {
+      const data = await getOwnerItemViews(userId, group.id);
+      setItems(data);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, group.id]);
 
   useEffect(() => {
-  refresh();
-}, [refresh]);
+    refresh();
+  }, [refresh]);
 
- async function handleAdd(////////////////////////////////////////////////
-  data: Omit<WishlistItem, "id" | "userId" | "groupId">
-) {
-  await addItem({
-    ...data,
-    userId,
-    groupId: group.id,
-  });
+  const handleAdd = async (data: Omit<WishlistItem, "id" | "userId" | "groupId">) => {
+    try {
+      await addItem({ ...data, userId, groupId: group.id });
+      setShowAdd(false);
+      toast.success("Item added!");
+      refresh();
+    } catch (error) {
+      toast.error("Failed to add item");
+      console.error(error);
+    }
+  };
 
-  setShowAdd(false);
-  toast.success("Item added!");
-  refresh();
-}
+  const handleEdit = async (id: string, data: Omit<WishlistItem, "id" | "userId" | "groupId">) => {
+    try {
+      await updateItem(id, data);
+      setEditId(null);
+      toast.success("Item updated!");
+      refresh();
+    } catch (error) {
+      toast.error("Failed to update item");
+      console.error(error);
+    }
+  };
 
-
-async function handleEdit(
-  id: string,
-  data: Omit<WishlistItem, "id" | "userId" | "groupId">
-) {
-  await updateItem(id, data);
-  setEditId(null);
-  toast.success("Item updated!");
-  refresh();
-}
-
-async function handleDelete(id: string, name: string) {
-  await deleteItem(id);
-  toast.success(`"${name}" removed.`);
-  refresh();
-}
+  const handleDelete = async (id: string, name: string) => {
+    try {
+      await deleteItem(id);
+      toast.success(`"${name}" removed`);
+      refresh();
+    } catch (error) {
+      toast.error("Failed to delete item");
+      console.error(error);
+    }
+  };
 
   const sorted = [...items].sort((a, b) => a.priority - b.priority);
 
   return (
     <div className="space-y-4">
-      {/* Privacy notice */}
       <div className="bg-secondary/10 border border-secondary/25 rounded-2xl p-4 flex gap-3">
         <Lock className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-bold text-secondary mb-0.5">Your list is private to you</p>
+          <p className="text-sm font-bold text-secondary mb-0.5">Your list is private</p>
           <p className="text-xs text-muted-foreground">
-            Others can see your items and claim them, but you'll only know something has been claimed — never by whom.
-            This is enforced at the database level, not just the UI.
+            Others see your items and claim them, but you'll never know who claimed what. It's all secret!
           </p>
         </div>
       </div>
 
-      {/* Add button */}
       <div className="flex items-center justify-between">
         <h3 className="font-display text-lg font-bold text-foreground">
-          {sorted.length} item{sorted.length !== 1 ? "s" : ""} on your list
+          {loading ? "Loading…" : `${sorted.length} item${sorted.length !== 1 ? "s" : ""}`}
         </h3>
         <button
-          onClick={() => setShowAdd((p) => !p)}
+          onClick={() => setShowAdd(!showAdd)}
           className="flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
@@ -268,15 +289,13 @@ async function handleDelete(id: string, name: string) {
         </button>
       </div>
 
-      {showAdd && (
-        <ItemForm onSave={handleAdd} onCancel={() => setShowAdd(false)} />
-      )}
+      {showAdd && <ItemForm onSave={handleAdd} onCancel={() => setShowAdd(false)} />}
 
-      {sorted.length === 0 && !showAdd ? (
+      {!loading && sorted.length === 0 && !showAdd ? (
         <div className="text-center py-14 border-2 border-dashed border-border rounded-3xl">
           <Star className="w-10 h-10 text-accent mx-auto mb-3 opacity-60" />
           <p className="font-display text-lg font-bold text-foreground mb-1">Your wishlist is empty</p>
-          <p className="text-sm text-muted-foreground mb-4">Add items others can buy for you this Christmas!</p>
+          <p className="text-sm text-muted-foreground mb-4">Add items others can buy for you!</p>
           <button
             onClick={() => setShowAdd(true)}
             className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors"
@@ -303,11 +322,9 @@ async function handleDelete(id: string, name: string) {
                 }`}
               >
                 <div className="flex">
-                  {/* Image */}
                   <div className="w-24 h-24 flex-shrink-0 bg-muted">
                     <ItemImage url={item.imageUrl} name={item.name} />
                   </div>
-                  {/* Content */}
                   <div className="flex-1 min-w-0 p-3">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h4 className="font-semibold text-sm text-foreground leading-tight line-clamp-1">
@@ -332,14 +349,12 @@ async function handleDelete(id: string, name: string) {
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <PriorityBadge priority={item.priority} />
-                      {item.price && (
-                        <span className="text-xs text-muted-foreground">${item.price}</span>
-                      )}
+                      {item.price && <span className="text-xs text-muted-foreground">${item.price}</span>}
                     </div>
                     {item.isClaimed && (
                       <div className="flex items-center gap-1 mt-1.5 text-xs text-secondary font-bold">
                         <Check className="w-3 h-3" />
-                        Claimed by someone ✨
+                        Claimed ✨
                       </div>
                     )}
                     {item.shopUrl && (
@@ -364,45 +379,60 @@ async function handleDelete(id: string, name: string) {
   );
 }
 
-// ─── Browse Tab ───────────────────────────────────────────────────────────────
-
 function BrowseTab({ group, viewer }: { group: Group; viewer: { id: string; name: string } }) {
-  const [wishlists, setWishlists] = useState<
-  Awaited<ReturnType<typeof getGroupWishlists>>
->([]);
+  const [wishlists, setWishlists] = useState<Awaited<ReturnType<typeof getGroupWishlists>>>([]);
+  const [loading, setLoading] = useState(true);
 
-const refresh = useCallback(async () => {
-  const data = await getGroupWishlists(group.id, viewer.id);
-  setWishlists(data);
-}, [group.id, viewer.id]);
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getGroupWishlists(group.id, viewer.id);
+      setWishlists(data);
+    } finally {
+      setLoading(false);
+    }
+  }, [group.id, viewer.id]);
 
   useEffect(() => {
-  refresh();
-}, [refresh]);
-
-  async function handleClaim(item: WishlistItem & { isClaimed: boolean; claimedByMe: boolean }) {
-    if (item.isClaimed && !item.claimedByMe) {
-      toast.error("Someone else already claimed this.");
-      return;
-    }
-    if (item.claimedByMe) {
-      await unclaimItem(item.id, viewer.id);
-      toast.success("Claim released.");
-    } else {
-      await claimItem(item, viewer);
-      toast.success("Claimed! It's a secret 🤫");
-    }
     refresh();
+  }, [refresh]);
+
+  const handleClaim = async (item: WishlistItem & { isClaimed: boolean; claimedByMe: boolean }) => {
+    try {
+      if (item.isClaimed && !item.claimedByMe) {
+        toast.error("Already claimed by someone else");
+        return;
+      }
+      if (item.claimedByMe) {
+        await unclaimItem(item.id, viewer.id);
+        toast.success("Claim released");
+      } else {
+        await claimItem(item, viewer);
+        toast.success("Claimed! 🎁");
+      }
+      refresh();
+    } catch (error) {
+      toast.error("Failed to claim item");
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        <div className="text-sm">Loading wishlists…</div>
+      </div>
+    );
   }
 
   const others = wishlists.filter((w) => w.items.length > 0);
 
-  if (others.length === 0 && wishlists.length > 0) {
+  if (wishlists.length === 0 || others.length === 0) {
     return (
       <div className="text-center py-14">
         <Gift className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
         <p className="font-display text-lg font-bold text-foreground mb-1">No wishlists yet</p>
-        <p className="text-sm text-muted-foreground">Other members haven't added any items yet. Check back soon!</p>
+        <p className="text-sm text-muted-foreground">Other members haven't added items yet</p>
       </div>
     );
   }
@@ -412,8 +442,7 @@ const refresh = useCallback(async () => {
       <div className="bg-accent/15 border border-accent/30 rounded-2xl p-4 flex gap-3">
         <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-amber-800">
-          <strong>Your claims are secret.</strong> Item owners will only see that something has been claimed — not by whom.
-          You can unclaim any time before the exchange.
+          <strong>Your claims are secret.</strong> Item owners only see that something was claimed, not by whom.
         </p>
       </div>
 
@@ -424,13 +453,13 @@ const refresh = useCallback(async () => {
               {member.name[0].toUpperCase()}
             </div>
             <div>
-              <h3 className="font-display text-lg font-bold text-foreground">{member.name}'s wishlist</h3>
+              <h3 className="font-display text-lg font-bold text-foreground">{member.name}'s list</h3>
               <p className="text-xs text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
 
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground italic pl-13">No items yet.</p>
+            <p className="text-sm text-muted-foreground italic">No items yet</p>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...items].sort((a, b) => a.priority - b.priority).map((item) => (
@@ -441,14 +470,12 @@ const refresh = useCallback(async () => {
                       ? item.claimedByMe
                         ? "border-secondary/50 ring-1 ring-secondary/30"
                         : "border-muted opacity-60"
-                      : "border-border hover:border-primary/25 hover:shadow-sm"
+                      : "border-border hover:border-primary/25"
                   }`}
                 >
-                  {/* Image */}
                   <div className="h-36 bg-muted">
                     <ItemImage url={item.imageUrl} name={item.name} />
                   </div>
-
                   <div className="p-4">
                     <h4 className="font-semibold text-sm text-foreground mb-1 line-clamp-2">{item.name}</h4>
                     {item.description && (
@@ -460,7 +487,6 @@ const refresh = useCallback(async () => {
                         <span className="text-xs text-muted-foreground font-semibold">${item.price}</span>
                       )}
                     </div>
-
                     <div className="flex gap-2">
                       {item.shopUrl && (
                         <a
@@ -473,16 +499,15 @@ const refresh = useCallback(async () => {
                           Shop
                         </a>
                       )}
-
                       <button
                         onClick={() => handleClaim(item)}
                         disabled={item.isClaimed && !item.claimedByMe}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:cursor-not-allowed ${
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                           item.claimedByMe
                             ? "bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25"
                             : item.isClaimed
                             ? "bg-muted text-muted-foreground"
-                            : "bg-primary text-white hover:bg-primary/90 shadow-sm"
+                            : "bg-primary text-white hover:bg-primary/90"
                         }`}
                       >
                         {item.claimedByMe ? (
@@ -491,11 +516,11 @@ const refresh = useCallback(async () => {
                             Unclaim
                           </>
                         ) : item.isClaimed ? (
-                          "Already claimed"
+                          "Claimed"
                         ) : (
                           <>
                             <Gift className="w-3 h-3" />
-                            I'll get this!
+                            Claim
                           </>
                         )}
                       </button>
@@ -511,27 +536,28 @@ const refresh = useCallback(async () => {
   );
 }
 
-// ─── Members Tab ─────────────────────────────────────────────────────────────
-
 function MembersTab({ group }: { group: Group }) {
   const [copied, setCopied] = useState(false);
   const inviteUrl = `${window.location.origin}/join/${group.inviteCode}`;
 
-  async function copyLink() {
-    await navigator.clipboard.writeText(inviteUrl);
-    setCopied(true);
-    toast.success("Invite link copied!");
-    setTimeout(() => setCopied(false), 2500);
-  }
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      toast.success("Link copied!");
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Invite */}
       <div className="bg-card border border-border rounded-2xl p-5">
-        <h3 className="font-display text-base font-bold text-foreground mb-1">Invite more people</h3>
-        <p className="text-sm text-muted-foreground mb-3">Share this link — anyone with it can join the group.</p>
+        <h3 className="font-display text-base font-bold text-foreground mb-1">Invite members</h3>
+        <p className="text-sm text-muted-foreground mb-3">Share this link to invite others</p>
         <div className="flex gap-2">
-          <div className="flex-1 flex items-center gap-2 bg-muted border border-border rounded-xl px-3 py-2.5 overflow-hidden">
+          <div className="flex-1 flex items-center gap-2 bg-muted border border-border rounded-xl px-3 py-2.5">
             <Link2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm text-foreground truncate">{inviteUrl}</span>
           </div>
@@ -547,7 +573,6 @@ function MembersTab({ group }: { group: Group }) {
         </div>
       </div>
 
-      {/* Members list */}
       <div>
         <h3 className="font-display text-base font-bold text-foreground mb-3">
           {group.members.length} member{group.members.length !== 1 ? "s" : ""}
@@ -555,7 +580,7 @@ function MembersTab({ group }: { group: Group }) {
         <div className="space-y-2">
           {group.members.map((m) => (
             <div key={m.userId} className="bg-card rounded-2xl border border-border px-4 py-3 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-bold">
                 {m.name[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -563,9 +588,7 @@ function MembersTab({ group }: { group: Group }) {
                 <p className="text-xs text-muted-foreground truncate">{m.email}</p>
               </div>
               {m.userId === group.ownerId && (
-                <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
-                  Owner
-                </span>
+                <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full">Owner</span>
               )}
             </div>
           ))}
@@ -575,44 +598,36 @@ function MembersTab({ group }: { group: Group }) {
   );
 }
 
-// ─── Main Group View ──────────────────────────────────────────────────────────
-
 type Tab = "wishlist" | "browse" | "members";
 
 export default function GroupView() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [group, setGroup] = useState<Group | null>(null);
   const [tab, setTab] = useState<Tab>("wishlist");
   const [notFound, setNotFound] = useState(false);
 
-useEffect(() => {///////////////////////////////////////////////////////////////
-  async function loadGroup() {
-    if (!id) return;
-
-    const g = await getGroupById(id);
-
-    if (!g) {
-      setNotFound(true);
-      return;
-    }
-
-    setGroup(g);
-  }
-
-  loadGroup();
-}, [id]);
+  useEffect(() => {
+    const loadGroup = async () => {
+      if (!id) return;
+      const g = await getGroupById(id);
+      if (!g) {
+        setNotFound(true);
+        return;
+      }
+      setGroup(g);
+    };
+    loadGroup();
+  }, [id]);
 
   if (!user) return null;
-
   if (notFound) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
         <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
         <h2 className="font-display text-2xl font-bold text-foreground mb-2">Group not found</h2>
         <p className="text-muted-foreground mb-6">This group doesn't exist or you don't have access.</p>
-        <Link to="/dashboard" className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary/90 transition-colors">
+        <Link to="/dashboard" className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary/90">
           Back to Dashboard
         </Link>
       </div>
@@ -629,47 +644,34 @@ useEffect(() => {///////////////////////////////////////////////////////////////
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Header */}
       <div className="mb-8">
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-        >
+        <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="w-4 h-4" />
           Dashboard
         </Link>
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="font-display text-3xl font-bold text-foreground mb-1">{group.name}</h1>
-            {group.description && (
-              <p className="text-muted-foreground">{group.description}</p>
-            )}
-            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" />
-                {group.members.length} members
-              </span>
-              {group.budget && (
-                <span className="flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 text-accent" />
-                  ${group.budget} budget
-                </span>
-              )}
-            </div>
-          </div>
+        <h1 className="font-display text-3xl font-bold text-foreground mb-1">{group.name}</h1>
+        {group.description && <p className="text-muted-foreground">{group.description}</p>}
+        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Users className="w-3.5 h-3.5" />
+            {group.members.length} members
+          </span>
+          {group.budget && (
+            <span className="flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-accent" />
+              ${group.budget} budget
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex border-b border-border mb-8 gap-1">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold transition-all border-b-2 -mb-px ${
-              tab === t.id
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+              tab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {t.icon}
@@ -683,7 +685,6 @@ useEffect(() => {///////////////////////////////////////////////////////////////
         ))}
       </div>
 
-      {/* Tab content */}
       {tab === "wishlist" && <MyWishlistTab group={group} userId={user.id} />}
       {tab === "browse" && <BrowseTab group={group} viewer={{ id: user.id, name: user.name }} />}
       {tab === "members" && <MembersTab group={group} />}
