@@ -1,5 +1,7 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "buildCommand": "npm ci && npm run build",
+  "outputDirectory": "dist",
+  "envPrefix": "VITE_",
+  "framework": "vite",
+  "nodejs": "18.x"
 }
