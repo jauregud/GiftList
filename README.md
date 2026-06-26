@@ -11,7 +11,7 @@
 ---
 
 ## Important Links
-GiftList Website - https://gift-list-pink.vercel.app/dashboard
+GiftList Website - https://gift-list-pink.vercel.app
 ---
 
 ## 1. Abstract
