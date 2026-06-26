@@ -11,9 +11,7 @@
 ---
 
 ## Important Links
-LucidChart Diagrams - https://lucid.app/lucidchart/86c66f15-f086-40fd-9e13-954487fd6dd2/edit?beaconFlowId=693C219668540326&invitationId=inv_d87975cb-13cc-4b97-bfd5-43dd285a0dd5&page=0_0#
-Figma UI - https://www.figma.com/design/63faLuDJad4PZ2VO0HwPWU/CIS350-Project-UI?node-id=0-1&p=f&t=o0PSfmQVKbfnbpQA-0
-
+GiftList Website - https://gift-list-pink.vercel.app/dashboard
 ---
 
 ## 1. Abstract
@@ -79,7 +77,8 @@ The `claims` subcollection is the core of the privacy system. Firestore security
 
 The class diagram below describes the primary data models and their relationships within the GiftList system.
 
-![Class Diagram]*place png*
+<img width="296" height="298" alt="Class Diagram" src="https://github.com/user-attachments/assets/4685e290-8fde-47b3-af4c-e0f6221c0954" />
+
 *Figure 2: Class Diagram*
 
 Key classes include `User`, `Group`, `Wishlist`, `WishlistItem`, and `Claim`. The `FirestoreService` class acts as the data access layer, and `AuthService` handles user authentication. UI boundary classes (`GroupDashboardPage`, `MyListPage`, `LoginPage`) interact with services directly.
@@ -91,6 +90,7 @@ Key classes include `User`, `Group`, `Wishlist`, `WishlistItem`, and `Claim`. Th
 The use case diagram captures all meaningful interactions a user can perform within GiftList.
 
 
+<img width="268" height="346" alt="Use Case Diagram" src="https://github.com/user-attachments/assets/d93e67aa-738f-4eda-b81f-bf24054af507" />
 
 *Figure 3: Use Case Diagram*
 
@@ -102,13 +102,16 @@ Primary use cases include: Register / Sign In, Create Exchange Group, Invite Mem
 
 Three core user flows are represented as sequence diagrams.
 
-![Sequence Diagram — Add Wishlist Item]*place png*
+<img width="263" height="160" alt="Add Item Sequence Diagram" src="https://github.com/user-attachments/assets/1500ab9a-3ac7-43f0-85bb-8bb618bec624" />
+
 *Figure 4: Sequence Diagram — Adding a Wishlist Item*
 
-![Sequence Diagram — Claim a Gift]*place png*
+<img width="249" height="164" alt="Claim Item Sequence Diagram" src="https://github.com/user-attachments/assets/dbca63a0-037c-48e3-b663-994686f6a1e2" />
+
 *Figure 5: Sequence Diagram — Claiming a Gift Item*
 
-![Sequence Diagram — Join Group]*place png* 
+<img width="299" height="208" alt="Join Group Sequence Diagram" src="https://github.com/user-attachments/assets/203e1339-d7bc-4d95-a7cd-5d6f71baf1fc" />
+
 *Figure 6: Sequence Diagram — Joining a Group via Invite Link*
 
 ---
@@ -117,13 +120,16 @@ Three core user flows are represented as sequence diagrams.
 
 Communication diagrams show the same interactions as the sequence diagrams above but illustrate the object relationships horizontally, emphasizing which components exchange messages.
 
-![Communication Diagram — Add Wishlist Item]*place png*
+<img width="313" height="235" alt="Add Item Comm Diagram" src="https://github.com/user-attachments/assets/da8e21e6-d923-453b-ac02-3e045942a478" />
+
 *Figure 7: Communication Diagram — Adding a Wishlist Item*
 
-![Communication Diagram — Claim a Gift]*place png*
+<img width="328" height="215" alt="Claim Item Comm Diag" src="https://github.com/user-attachments/assets/d1ad9d69-3f43-462c-ba92-91380f44fcbf" />
+
 *Figure 8: Communication Diagram — Claiming a Gift Item*
 
-![Communication Diagram — Join Group]*place png* 
+<img width="337" height="227" alt="Join Group Comm Diagram" src="https://github.com/user-attachments/assets/016610b4-4ebb-4d7f-aa6d-a4a8cf96baa7" />
+
 *Figure 9: Communication Diagram — Joining a Group via Invite Link*
 
 ---
@@ -134,14 +140,16 @@ Communication diagrams show the same interactions as the sequence diagrams above
 
 When the user first visits GiftList they are presented with a login screen. Clicking "Sign in with Google" opens the standard Google OAuth popup. After authentication the user is redirected to the Group Dashboard.
 
-![Login Page]*place png* 
+<img width="950" height="493" alt="Login Page" src="https://github.com/user-attachments/assets/79bbcd8c-7874-4e55-bb2c-ae3344dabf67" />
+
 *Figure 10: Login / Landing Page*
 
 ### 4.2 Group Dashboard
 
 After logging in, the user sees all groups they belong to. From here they can create a new group or select an existing one.
 
-![Group Dashboard]*place png* 
+<img width="953" height="494" alt="Group Dashboard" src="https://github.com/user-attachments/assets/bad282c0-fba3-4c53-beb2-c1d13d7b3907" />
+
 *Figure 11: Group Dashboard*
 
 **Creating a group** prompts the user to enter a group name. Upon creation, a unique invite code is generated and a shareable link is displayed that can be copied and sent to family or friends.
@@ -150,7 +158,8 @@ After logging in, the user sees all groups they belong to. From here they can cr
 
 Each user has a personal wishlist within each group. On the My List page, users can add, reorder, and delete items.
 
-![My List Page]*place png* 
+<img width="950" height="492" alt="My List Page" src="https://github.com/user-attachments/assets/7edb3e80-219d-44ef-ae0f-bd22dfd396e7" />
+
 *Figure 12: My Wishlist Page*
 
 **Adding an item** opens a form with fields for item name, shopping URL, image upload, and priority number. Items are displayed sorted by priority. The drag-to-reorder handle lets users reorganize their list by dragging items up or down.
@@ -161,7 +170,8 @@ Each user has a personal wishlist within each group. On the My List page, users 
 
 Selecting another member from the group shows their wishlist. Items display the priority badge, shopping link, and image. Unclaimed items show a "Claim" button. Claimed items show a "Claimed" badge.
 
-![Member List View]*place png*
+<img width="955" height="494" alt="Member List Page" src="https://github.com/user-attachments/assets/c7687527-f952-40e0-897b-b43691733b2f" />
+
 *Figure 13: Viewing Another Member's Wishlist*
 
 Clicking "Claim" writes a document to the `claims` subcollection with the claimer's UID and item details. The button is immediately disabled to prevent double-claiming.
@@ -190,11 +200,5 @@ GiftList provides a clean, focused solution to the perennial problem of Christma
 
 ---
 
-## 7. Walkthrough
 
-[Video Demo — Coming Soon]
-
-  # GiftList web application
-
-  This is a code bundle for GiftList web application. The original project is available at https://www.figma.com/design/gJjQiowUBdJF12YLMNOesm/GiftList-web-application.
 
