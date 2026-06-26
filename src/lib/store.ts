@@ -1,12 +1,12 @@
 import type { Group, WishlistItem, Claim, Member } from "./types";
 import { getFirestoreDb } from "./firebase";
-
+//create a random id
 function nanoid(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
 // ─── Groups ───────────────────────────────────────────────────────────────────
-
+//load the groups and return the ones that the user is part of
 export async function getUserGroups(userId: string): Promise<Group[]> {
   const db = await getFirestoreDb();
   const { collection, getDocs } = await import("firebase/firestore");
@@ -16,7 +16,7 @@ export async function getUserGroups(userId: string): Promise<Group[]> {
     (g) => g.ownerId === userId || g.members.some((m) => m.userId === userId)
   );
 }
-
+//return a group that matches the id
 export async function getGroupById(groupId: string): Promise<Group | null> {
   const db = await getFirestoreDb();
   const { doc, getDoc } = await import("firebase/firestore");
@@ -24,7 +24,7 @@ export async function getGroupById(groupId: string): Promise<Group | null> {
   if (!snap.exists()) return null;
   return snap.data() as Group;
 }
-
+//make a new group with all of the different parameters
 export async function createGroup(
   name: string,
   description: string,
@@ -48,6 +48,7 @@ export async function createGroup(
   return group;
 }
 
+//find the group that matches the invite code
 export async function joinGroupByCode(
   code: string,
   joiner: { id: string; name: string; email: string }
@@ -70,7 +71,7 @@ export async function joinGroupByCode(
 }
 
 // ─── Wishlist Items (Firestore) ───────────────────────────────────────────────
-
+//return the items for a user
 export async function getMyItems(
   userId: string,
   groupId: string
@@ -86,6 +87,7 @@ export async function getMyItems(
   return snap.docs.map((d) => d.data() as WishlistItem);
 }
 
+//make a new item and save it in firestore
 export async function addItem(
   item: Omit<WishlistItem, "id">
 ): Promise<WishlistItem> {
@@ -102,6 +104,7 @@ export async function addItem(
   return newItem;
 }
 
+//change only the parts of an item that were updated
 export async function updateItem(
   id: string,
   updates: Partial<WishlistItem>
@@ -117,6 +120,7 @@ export async function updateItem(
   await updateDoc(doc(db, "items", id), dataToUpdate as Record<string, unknown>);
 }
 
+//remove the item and claims associated with it
 export async function deleteItem(id: string): Promise<void> {
   const db = await getFirestoreDb();
   const { doc, deleteDoc, collection, query, where, getDocs } =
@@ -133,6 +137,7 @@ export async function deleteItem(id: string): Promise<void> {
 
 // ─── Claims (Firestore) ───────────────────────────────────────────────────────
 
+//claims the item if nobody else has yet
 export async function claimItem(
   item: WishlistItem,
   claimer: { id: string; name: string }
@@ -140,6 +145,8 @@ export async function claimItem(
   const db = await getFirestoreDb();
   const { collection, query, where, getDocs, doc, setDoc } =
     await import("firebase/firestore");
+
+  
   // Check for existing claim
   const existing = query(
     collection(db, "claims"),
@@ -157,7 +164,7 @@ export async function claimItem(
   };
   await setDoc(doc(db, "claims", claim.id), claim);
 }
-
+//removes the claim for hte item
 export async function unclaimItem(
   itemId: string,
   userId: string
@@ -175,7 +182,7 @@ export async function unclaimItem(
 }
 
 // ─── Group Wishlists (for browse tab) ────────────────────────────────────────
-
+//load all of the members' lists except for the user
 export async function getGroupWishlists(
   groupId: string,
   viewerId: string
@@ -233,7 +240,7 @@ export async function getGroupWishlists(
 }
 
 // ─── Owner item views ─────────────────────────────────────────────────────────
-
+//return user's list with claimed status
 export async function getOwnerItemViews(
   userId: string,
   groupId: string
