@@ -1,16 +1,17 @@
+//define the parameters for user type
 export interface User {
   id: string;
   name: string;
   email: string;
   photoURL?: string;
 }
-
+//define the parameters for member type
 export interface Member {
   userId: string;
   name: string;
   email: string;
 }
-
+//define the parameters for group
 export interface Group {
   id: string;
   name: string;
@@ -22,9 +23,9 @@ export interface Group {
   members: Member[];
   createdAt: string;
 }
-
+//define the parameters for setting priority level
 export type Priority = 1 | 2 | 3;
-
+//define the parameters for a wishlist
 export interface WishlistItem {
   id: string;
   userId: string;
