@@ -90,7 +90,7 @@ Key classes include `User`, `Group`, `Wishlist`, `WishlistItem`, and `Claim`. Th
 
 The use case diagram captures all meaningful interactions a user can perform within GiftList.
 
-<img width="2720" height="2880" alt="giftlist_use_case_diagram" src="https://github.com/user-attachments/assets/b9fe330e-c6ea-42d1-8c5a-e71193a71a6b" />
+
 
 *Figure 3: Use Case Diagram*
 
